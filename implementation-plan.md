@@ -1,12 +1,30 @@
 # WhiteBoard Implementation Plan
 
-**What it is:** A modular-monolith education platform (Next.js + PostgreSQL + Redis) connecting learners, parents, educators, institutions, and scholarship providers, with AI-generated practice content and low-bandwidth-first design.
+## Step 0 — Scope confirmation
 
-**Who uses it:** Learners (multi-curriculum), Parents/Guardians (multi-child management), Educators/Tutors, Learning Institutions, Scholarship Providers, and Platform Administrators.
+> **What it is:** A modular-monolith education platform (Next.js + PostgreSQL + Redis) connecting learners, parents, educators, institutions, and scholarship providers, with AI-generated practice content and low-bandwidth-first design.
+> **Who uses it:** Learners (multi-curriculum), Parents/Guardians (multi-child management), Educators/Tutors, Learning Institutions, Scholarship Providers / Foundations, and Platform Administrators (incl. SUPER_ADMIN).
+> **What's out of scope:** Native mobile apps (PWA covers mobile surface), multi-tenant microservices at MVP, advanced ML beyond quiz generation / material processing, complex payments beyond M-Pesa + card fallback, and any curriculum content that hasn't cleared licensing.
+> **Key constraints:** Kenya-first low-bandwidth market, mobile-first on mid-range Android, children's-data privacy (Kenya DPA 2019 baseline, GDPR-equivalent principles), WCAG 2.1 AA, gender equity as a brand differentiator, feature-rich but lightweight engineering.
 
-**What's out of scope (MVP):** Native mobile apps, multi-tenant microservices, advanced ML beyond quiz generation, complex payments beyond M-Pesa + card fallback.
+**Ambiguities (flagged in Step 0):**
 
-**Key constraints:** Kenya-first low-bandwidth market, mobile-first on mid-range Android, children's-data privacy (Kenya DPA 2019 baseline, GDPR-equivalent principles), WCAG 2.1 AA, gender-equity as a brand differentiator, feature-rich but lightweight engineering.
+| Ambiguity | Classification | Resolution |
+|---|---|---|
+| Hosting / backend framework (Next.js API routes vs NestJS) | Blocks implementation | Default: Next.js API routes at MVP with a documented NestJS swap path — see ADR-002 and Phase 1 |
+| LLM provider | Blocks implementation (Phase 2) | Default: Anthropic Claude behind a provider abstraction — see ADR-004 |
+| CBC pilot scope | Blocks implementation (Phase 1) | Default: a scoped grade-band CBC pilot mapped to official KICD documents only |
+| Billing tier definitions / pricing | Blocks implementation (Phase 4) | Decided in Phase 4 against real usage; caps enforced server-side regardless |
+| Exact localization languages | Nice-to-have | English-first with next-intl scaffolded; Kiswahili in Future considerations |
+
+**Classification (4 axes):**
+
+| Axis | Value | Why it matters |
+|---|---|---|
+| Surface | Web app + PWA | Determines frontend + UI/UX agents; mobile-first learner/parent surfaces |
+| Data layer | Relational (PostgreSQL) + cache (Redis) + object storage | Determines database-architect; multi-curriculum, consent-scoped access |
+| Team-facing complexity | Small-team multi-tenant SaaS MVP | Devops + QA justify their roles; modular monolith keeps it lean |
+| Novel risk area | Children's data, payments, AI content, ML generation | Security + AI agents required; guardrails from Prompt.md §18 |
 
 ---
 
@@ -105,11 +123,6 @@
 
 ---
 
-## Step 0 flags not yet addressable
+## Step 4a — GitHub sync status
 
-| Item | Status |
-|---|---|
-| Surveillance: none | Addressed |
-| Repo sync (Step 4a) | Blocked on git/gh availability — see note below |
-
-Per README Step 4a: the GitHub repository at `https://github.com/Wamukoko/whiteboard` is created when the first phase is *implemented* (not at the planning stage), and this requires git + `gh` configured in the environment. If either is missing, state the blocker before proceeding.
+Per README Step 4a: repository created at `https://github.com/Wamukoko/whiteboard` (git + `gh` confirmed available and authenticated). The Phase 0 bootstrap (planning + scaffolding docs) is committed and pushed to `main`. Going forward, every completed phase is committed and pushed, and ad-hoc changes receive their own descriptive commits.
