@@ -43,6 +43,7 @@
 - **Exit criteria:** A fresh user can sign up, add a child, pick a curriculum, and see a populated parent dashboard; learner dashboard renders on a 360px viewport over throttled 3G; CI passes and backups restore successfully.
 - **Decisions needed:** Curriculum coverage for the CBC pilot (which grade bands/strands ship first); hosting provider choice (Vercel vs Railway/Render).
 - **Risks:** CBC curriculum accuracy → mitigate by mapping against official KICD documents, never fabricating structure; AI dependency → none in this phase, cost baseline low.
+- **Status:** Implemented and verified (`pnpm verify` green: schema valid, lint, typecheck, build, 11 shared-schema tests). Committed as `f526bc0` and pushed to `main` (2026-09-07). Remaining exit-criteria items require a live environment: E2E on 360px/throttled 3G, CI run against postgres/redis services, backup restore drill.
 
 ---
 
@@ -125,4 +126,4 @@
 
 ## Step 4a — GitHub sync status
 
-Per README Step 4a: repository created at `https://github.com/Wamukoko/whiteboard` (git + `gh` confirmed available and authenticated). The Phase 0 bootstrap (planning + scaffolding docs) is committed and pushed to `main`. Going forward, every completed phase is committed and pushed, and ad-hoc changes receive their own descriptive commits.
+Per README Step 4a: repository created at `https://github.com/Wamukoko/whiteboard` (git + `gh` confirmed available and authenticated). Phase 0 (bootstrap) and Phase 1 (foundation) are committed on `main` (`78043dd` bootstrap, `f526bc0` Phase 1). Going forward, every completed phase is committed and pushed, and ad-hoc changes receive their own descriptive commits.
