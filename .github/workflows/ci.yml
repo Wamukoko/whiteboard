@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+env:
+  CI: "true"
+  DATABASE_URL: "postgresql://whiteboard:whiteboard@localhost:5432/whiteboard?schema=public"
+  REDIS_URL: "redis://localhost:6379"
+  AUTH_SECRET: "ci-placeholder-secret-change-me"
+  AUTH_TRUST_HOST: "true"
+  APP_URL: "http://localhost:3000"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: whiteboard
+          POSTGRES_PASSWORD: whiteboard
+          POSTGRES_DB: whiteboard
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U whiteboard -d whiteboard"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prisma schema
+        run: pnpm db:validate
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Push schema to CI database
+        run: pnpm --filter @whb/db push
+
+      - name: Seed pilot curricula
+        run: pnpm db:seed
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build

@@ -1,0 +1,26 @@
+{
+  "name": "whiteboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WhiteBoard - Ask. Learn. Become. Inclusive digital learning ecosystem.",
+  "scripts": {
+    "dev": "pnpm --filter @whb/web dev",
+    "build": "pnpm db:generate && pnpm --filter @whb/web build",
+    "lint": "pnpm --parallel -r lint",
+    "typecheck": "pnpm --parallel -r typecheck",
+    "test": "pnpm --filter @whb/shared test --run",
+    "db:generate": "pnpm --filter @whb/db generate",
+    "db:validate": "pnpm --filter @whb/db validate",
+    "db:migrate": "pnpm --filter @whb/db migrate",
+    "db:seed": "pnpm --filter @whb/db seed",
+    "verify": "pnpm db:validate && pnpm lint && pnpm typecheck && pnpm build && pnpm test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.1.4",
+    "typescript": "^5.6.3"
+  }
+}
