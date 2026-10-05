@@ -9,6 +9,7 @@ import type {
 
 export * from "./types";
 export * from "./prompt";
+export * from "./transcriber";
 export { AnthropicQuizGenerator } from "./anthropic-generator";
 
 /**
