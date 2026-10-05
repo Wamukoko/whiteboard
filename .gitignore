@@ -40,5 +40,9 @@ infra/.redisdata/
 
 # editor
 .idea/
-.vscode/
-!.vscode/extensions.json*.tsbuildinfo
+.vscode/*
+!.vscode/extensions.json
+
+# typescript incremental build artifacts
+*.tsbuildinfo
+
