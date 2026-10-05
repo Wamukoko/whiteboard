@@ -4,3 +4,4 @@ export * from "./response";
 export * from "./dashboard";
 export * from "./quiz";
 export * from "./learning";
+export * from "./chunking";
