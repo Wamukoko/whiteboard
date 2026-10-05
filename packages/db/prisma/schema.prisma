@@ -50,6 +50,23 @@ enum ReviewState {
   REJECTED
 }
 
+// Phase 2 pipeline state. A background job owns the transition from PENDING to
+// READY/FAILED, so the parent review screen can distinguish "still generating"
+// from "ready to review" and from "generation failed".
+enum ExtractionState {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum GenerationState {
+  QUEUED
+  PROCESSING
+  READY
+  FAILED
+}
+
 enum GeneratedContentType {
   QUIZ
   STUDY_GUIDE
@@ -196,6 +213,7 @@ model LearnerProfile {
   attempts            AssessmentAttempt[]  @relation("LearnerAttempts")
   applications        Application[]        @relation("LearnerApplications")
   sessionEnrollments  SessionEnrollment[]
+  generatedContent    GeneratedLearningContent[]
 
   @@index([familyId])
   @@index([fullName])
@@ -294,45 +312,68 @@ model LearningProgress {
 }
 
 model UploadedMaterial {
-  id           String  @id @default(cuid())
+  id           String   @id @default(cuid())
   familyId     String
   uploadedById String
   fileName     String
   mimeType     String
   sizeBytes    Int
   storageKey   String
-  createdAt    DateTime @default(now())
+  // Extracted text is the generation input. Kept on the material so a failed
+  // generation can be retried without re-uploading or re-running OCR.
+  extractionState ExtractionState @default(PENDING)
+  extractedText   String?
+  extractedChars  Int?
+  failureReason   String?
+  createdAt       DateTime        @default(now())
 
   family    FamilyAccount           @relation(fields: [familyId], references: [id], onDelete: Cascade)
   uploadedBy User                   @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
   generated GeneratedLearningContent[] @relation("SourceMaterialGenerated")
 
   @@index([familyId, createdAt])
+  @@index([extractionState])
 }
 
 // AI content origin + review gate (data-model rule 3). Unreviewed content is
 // never surfaced to a learner dashboard.
 model GeneratedLearningContent {
-  id               String        @id @default(cuid())
+  id               String                @id @default(cuid())
   familyId         String
+  // The learner whose grade band the quiz targets; generation is per learner
+  // because difficulty and CBC alignment are grade-band specific.
+  learnerId        String
   sourceMaterialId String?
-  contentType      GeneratedContentType @default(QUIZ)
+  contentType      GeneratedContentType  @default(QUIZ)
   provider         String // "anthropic"; provider abstraction field
   model            String
-  tokensUsed       Int           @default(0)
-  reviewState      ReviewState   @default(PENDING_REVIEW)
+  generationState  GenerationState       @default(QUEUED)
+  failureReason    String?
+  // Token accounting: split for cost analysis, tokensUsed is the total that
+  // monthly cap enforcement reads.
+  inputTokens      Int                   @default(0)
+  outputTokens     Int                   @default(0)
+  tokensUsed       Int                   @default(0)
+  reviewState      ReviewState           @default(PENDING_REVIEW)
   reviewedById     String?
   reviewedAt       DateTime?
+  reviewNotes      String?
   payload          Json          // structured quiz/content per shared Zod schema
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
   family         FamilyAccount             @relation("FamilyGeneratedContent", fields: [familyId], references: [id], onDelete: Cascade)
+  learner        LearnerProfile            @relation(fields: [learnerId], references: [id], onDelete: Cascade)
   sourceMaterial UploadedMaterial?         @relation("SourceMaterialGenerated", fields: [sourceMaterialId], references: [id], onDelete: SetNull)
   reviewedBy     User?                     @relation("ReviewedContent", fields: [reviewedById], references: [id], onDelete: SetNull)
   assessments    Assessment[]              @relation("ContentAssessment")
 
+  // familyId + createdAt serves monthly cap counting (data-model rule: caps
+  // enforced server-side) without a separate ledger table.
+  @@index([familyId, createdAt])
   @@index([familyId, reviewState, createdAt])
+  @@index([learnerId])
+  @@index([generationState])
   @@index([sourceMaterialId])
 }
 
