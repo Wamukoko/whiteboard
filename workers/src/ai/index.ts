@@ -1,5 +1,15 @@
-import { chunkText, estimateTokens, type Chunk } from "@whb/shared";
+import {
+  chunkText,
+  estimateTokens,
+  DEFAULT_AI_PROVIDER_ID,
+  PROVIDER_IDS,
+  defaultModelForProvider,
+  findProvider,
+  isModelAllowed,
+  type Chunk,
+} from "@whb/shared";
 import { AnthropicQuizGenerator } from "./anthropic-generator";
+import { OpenAICompatibleQuizGenerator } from "./openai-compatible-generator";
 import type {
   GenerationRequest,
   GenerationResult,
@@ -11,16 +21,59 @@ export * from "./types";
 export * from "./prompt";
 export * from "./transcriber";
 export { AnthropicQuizGenerator } from "./anthropic-generator";
+export { OpenAICompatibleQuizGenerator } from "./openai-compatible-generator";
+
+export interface QuizGeneratorSelection {
+  provider?: string;
+  model?: string;
+}
 
 /**
- * Build the provider for a request. The API key is read here rather than
- * threaded through callers so it never reaches a job payload or a log line.
+ * Build the provider for a request from the shared registry (ADR-004).
+ *
+ * Provider and model are resolved as: explicit selection -> environment
+ * (`AI_PROVIDER` / `AI_MODEL`) -> registry default. Credentials are read here,
+ * from the provider's own env var, so they never reach a job payload or a log
+ * line. Adding a new open-source model is then config, not a code change: point
+ * `AI_BASE_URL` at the server and name the model.
  */
-export function createQuizGenerator(model: string, apiKey = process.env.ANTHROPIC_API_KEY): QuizGenerator {
-  if (!apiKey) {
-    throw new Error("ANTHROPIC_API_KEY is not configured");
+export function createQuizGenerator(
+  selection: QuizGeneratorSelection = {},
+  env: NodeJS.ProcessEnv = process.env,
+): QuizGenerator {
+  const providerId = selection.provider ?? env.AI_PROVIDER ?? DEFAULT_AI_PROVIDER_ID;
+  const provider = findProvider(providerId);
+  if (!provider) {
+    throw new Error(
+      `Unknown AI provider "${providerId}". Known providers: ${PROVIDER_IDS.join(", ")}`,
+    );
   }
-  return new AnthropicQuizGenerator({ apiKey, model });
+
+  const model = selection.model ?? env.AI_MODEL ?? defaultModelForProvider(providerId);
+  if (!isModelAllowed(providerId, model)) {
+    throw new Error(`Model "${model}" is not available for provider "${providerId}"`);
+  }
+
+  const apiKey = provider.apiKeyEnv ? env[provider.apiKeyEnv] : undefined;
+
+  switch (provider.kind) {
+    case "anthropic": {
+      if (!apiKey) {
+        throw new Error(`${provider.apiKeyEnv} is not configured`);
+      }
+      return new AnthropicQuizGenerator({ apiKey, model });
+    }
+    case "openai-compatible": {
+      const baseUrl = env.AI_BASE_URL ?? provider.defaultBaseUrl;
+      if (!baseUrl) {
+        throw new Error(
+          `Provider "${providerId}" needs AI_BASE_URL (the OpenAI-compatible server root)`,
+        );
+      }
+      // Local servers (Ollama, vLLM) commonly need no key.
+      return new OpenAICompatibleQuizGenerator({ baseUrl, apiKey, model });
+    }
+  }
 }
 
 /**

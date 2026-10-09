@@ -1,5 +1,6 @@
 import { prisma } from "@whb/db";
 import {
+  DEFAULT_GENERATION_MODEL,
   estimateTokens,
   GENERATE_QUIZ_JOB,
   type GenerateQuizJobData,
@@ -28,11 +29,17 @@ export interface JobDependencies {
 }
 
 export function createJobDependencies(): JobDependencies {
+  // Transcription (PDF/image OCR) is Anthropic-only for now: Claude reads
+  // documents and images natively. Open-source providers can still generate
+  // quizzes; a deployment that must avoid Anthropic for OCR needs a separate
+  // vision/OCR transcriber. Provider + model for *generation* are resolved per
+  // job in `createQuizGenerator`, so they are not fixed here.
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY is not configured");
   }
-  return { transcriber: new AnthropicTranscriber({ apiKey, model: "claude-sonnet-5" }) };
+  const model = process.env.AI_TRANSCRIBE_MODEL ?? DEFAULT_GENERATION_MODEL;
+  return { transcriber: new AnthropicTranscriber({ apiKey, model }) };
 }
 
 export async function handleGenerateQuiz(
@@ -96,7 +103,7 @@ export async function handleGenerateQuiz(
       data: { generationState: "PROCESSING", failureReason: null },
     });
 
-    const generator = createQuizGenerator(data.model);
+    const generator = createQuizGenerator({ provider: data.provider, model: data.model });
     const result = await generateQuizFromDocument(
       generator,
       {

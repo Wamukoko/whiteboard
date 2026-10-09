@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const { sourceMaterialId, learnerId, questionCount, difficulty, model } = parsed.data;
+  const { sourceMaterialId, learnerId, questionCount, difficulty, provider, model } =
+    parsed.data;
 
   const material = await prisma.uploadedMaterial.findFirst({
     where: { id: sourceMaterialId, familyId },
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
       learnerId,
       sourceMaterialId,
       contentType: "QUIZ",
-      provider: "anthropic",
+      provider,
       model,
       generationState: "QUEUED",
       reviewState: "PENDING_REVIEW",
@@ -109,6 +110,7 @@ export async function POST(request: NextRequest) {
       learnerId,
       questionCount,
       difficulty,
+      provider,
       model,
       contentId: content.id,
     });

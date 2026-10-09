@@ -34,6 +34,8 @@ ADR log for decisions that are expensive to reverse. Each entry records the cont
 
 **Status:** Accepted. Provider may change; abstraction protects us.
 
+**Implementation (Phase 2):** Provider and model are data, not code. `packages/shared/src/providers.ts` is the registry (provider kind, API-key env var, default base URL, model list, per-provider default model). `requestQuizGenerationSchema` accepts `provider` + `model`, validates the model against its provider (a closed provider only allows registered models; an OpenAI-compatible provider accepts any non-empty id), and defaults to the deployment default. `workers/src/ai/index.ts` resolves provider/model as request -> env (`AI_PROVIDER`, `AI_MODEL`, `AI_BASE_URL`) -> registry default, then returns either `AnthropicQuizGenerator` (forced tool call) or `OpenAICompatibleQuizGenerator`. The latter speaks `POST {baseUrl}/chat/completions`, so Ollama, vLLM, LM Studio, llama.cpp server, OpenRouter, Groq and friends can be added by configuration alone — no schema, factory or job-handler changes. Token usage is read from the response and estimated when a local server omits it, so caps still bill. Transcription (PDF/image OCR) remains Anthropic-only for now. A DB-backed, admin-editable catalog is the Phase 3+ extension.
+
 ## ADR-005: Background jobs via BullMQ (Redis), not synchronous request work
 
 **Context:** AI generation takes up to 15s. Running it inline in the request path would blow the <500ms p95 and drown a constrained mobile user.

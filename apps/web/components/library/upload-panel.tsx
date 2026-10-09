@@ -81,7 +81,6 @@ export function UploadPanel({
           learnerId,
           questionCount,
           difficulty,
-          model: "claude-sonnet-5",
         }),
       });
       if (!generate.ok) {

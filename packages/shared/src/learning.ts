@@ -4,6 +4,13 @@ import {
   MAX_QUIZ_QUESTIONS,
   MIN_QUIZ_QUESTIONS,
 } from "./quiz";
+import {
+  DEFAULT_AI_PROVIDER_ID,
+  PROVIDER_IDS,
+  defaultModelForProvider,
+  isModelAllowed,
+  modelsForProvider,
+} from "./providers";
 
 /**
  * Phase 2 API request contracts.
@@ -21,8 +28,10 @@ export const ALLOWED_UPLOAD_MIME_TYPES = [
   "text/plain",
 ] as const;
 
-export const GENERATION_MODELS = ["claude-sonnet-5", "claude-haiku-4-5"] as const;
-export type GenerationModel = (typeof GENERATION_MODELS)[number];
+export const GENERATION_MODELS = modelsForProvider(DEFAULT_AI_PROVIDER_ID).map(
+  (model) => model.id,
+);
+export type GenerationModel = string;
 
 /** Persisted file metadata. Storage writes happen before this is recorded. */
 export const materialMetadataSchema = z.object({
@@ -44,18 +53,38 @@ export const materialMetadataSchema = z.object({
 
 export type MaterialMetadataInput = z.infer<typeof materialMetadataSchema>;
 
-export const requestQuizGenerationSchema = z.object({
-  sourceMaterialId: z.string().min(1, "Source material id is required"),
-  learnerId: z.string().min(1, "Learner id is required"),
-  questionCount: z
-    .number()
-    .int()
-    .min(MIN_QUIZ_QUESTIONS)
-    .max(MAX_QUIZ_QUESTIONS)
-    .default(10),
-  difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).default("MEDIUM"),
-  model: z.enum(GENERATION_MODELS).default("claude-sonnet-5"),
-});
+/**
+ * Provider + model are data-driven (see ./providers.ts): a request may name
+ * any registered provider, and the model must belong to that provider unless
+ * the provider accepts arbitrary model ids (self-hosted / OpenAI-compatible).
+ * Omitting both falls back to the deployment default.
+ */
+export const requestQuizGenerationSchema = z
+  .object({
+    sourceMaterialId: z.string().min(1, "Source material id is required"),
+    learnerId: z.string().min(1, "Learner id is required"),
+    questionCount: z
+      .number()
+      .int()
+      .min(MIN_QUIZ_QUESTIONS)
+      .max(MAX_QUIZ_QUESTIONS)
+      .default(10),
+    difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).default("MEDIUM"),
+    provider: z.enum(PROVIDER_IDS).default(DEFAULT_AI_PROVIDER_ID),
+    model: z.string().trim().min(1).max(120).optional(),
+  })
+  .transform((value, ctx) => {
+    const model = value.model ?? defaultModelForProvider(value.provider);
+    if (!isModelAllowed(value.provider, model)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["model"],
+        message: `Model "${model}" is not available for provider "${value.provider}".`,
+      });
+      return z.NEVER;
+    }
+    return { ...value, model };
+  });
 
 export type RequestQuizGenerationInput = z.infer<typeof requestQuizGenerationSchema>;
 
@@ -100,6 +129,7 @@ export interface GenerateQuizJobData {
   learnerId: string;
   questionCount: number;
   difficulty: "EASY" | "MEDIUM" | "HARD";
+  provider: string;
   model: string;
   /** Content row created at enqueue time; updated as the job progresses. */
   contentId: string;
