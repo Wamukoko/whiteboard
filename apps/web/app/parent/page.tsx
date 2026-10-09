@@ -1,40 +1,13 @@
 import Link from "next/link";
-import { Button, Icon, Sidebar } from "@whb/ui";
+import { Button, Icon } from "@whb/ui";
 import type { FamilyOverview } from "@/lib/dashboard-data";
 import { requireAuthenticatedSession } from "@/lib/dashboard-data";
 import { getFamilyOverview } from "@/lib/dashboard-data";
 import { ChildCard } from "@/components/child-card";
 import { Brand } from "@/components/brand";
+import { ParentSidebar } from "@/components/parent-sidebar";
 
 export const dynamic = "force-dynamic";
-
-const NAV_SECTIONS = [
-  {
-    key: "family",
-    label: "Family",
-    items: [
-      { id: "overview", label: "Overview", icon: "stylus_note", href: "/parent" },
-      { id: "children", label: "Children", icon: "family_restroom", href: "/parent" },
-      { id: "uploads", label: "Uploads", icon: "upload_file", href: "/parent" },
-    ],
-  },
-  {
-    key: "growth",
-    label: "Growth",
-    items: [
-      { id: "scholarships", label: "Scholarships", icon: "volunteer_activism", href: "/parent" },
-      { id: "classes", label: "Live classes", icon: "meeting_room", href: "/parent" },
-    ],
-  },
-  {
-    key: "account",
-    label: "Account",
-    items: [
-      { id: "settings", label: "Settings", icon: "settings", href: "/parent" },
-      { id: "billing", label: "Subscription", icon: "credit_card", href: "/parent" },
-    ],
-  },
-];
 
 export default async function ParentDashboard() {
   const user = await requireAuthenticatedSession();
@@ -42,13 +15,7 @@ export default async function ParentDashboard() {
 
   return (
     <div className="lg:flex max-w-shell mx-auto min-h-dvh">
-      <Sidebar
-        brand="WhiteBoard"
-        tagline={overview.familyName}
-        sections={NAV_SECTIONS}
-        activeId="overview"
-        className="sticky top-0 h-dvh"
-      />
+      <ParentSidebar activeId="overview" tagline={overview.familyName} />
 
       <div className="flex-1 px-margin-mobile md:px-margin-tablet lg:px-margin-desktop">
         <div className="lg:hidden pt-unit-6">

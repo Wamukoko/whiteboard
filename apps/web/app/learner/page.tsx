@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge, BottomNav, Icon, ProgressBar } from "@whb/ui";
 import { requireAuthenticatedSession } from "@/lib/dashboard-data";
 import { getLearnerView } from "@/lib/dashboard-data";
+import { getLearnerAssessments } from "@/lib/library-data";
 import { ChildSwitcher } from "@/components/child-switcher";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +38,7 @@ export default async function LearnerDashboard({
     user.id,
     childId,
   );
+  const assessments = child ? await getLearnerAssessments(user.id, child.id) : [];
 
   const greeting = greetingAt(new Date());
 
@@ -159,18 +161,46 @@ export default async function LearnerDashboard({
                 <span className="text-label-sm text-secondary">Quick Check</span>
               </div>
               <span className="font-mono text-code-sm text-on-surface-variant">
-                0 questions
+                {assessments.length} {assessments.length === 1 ? "quiz" : "quizzes"}
               </span>
             </div>
-            <div className="flex flex-col gap-unit-1">
-              <h3 className="font-display text-headline-sm text-on-surface">
-                Your first quiz is one upload away
-              </h3>
-              <p className="text-body-sm text-on-surface-variant">
-                A parent reviews every AI-generated quiz before it reaches your
-                board. Nothing unscreened ever lands here.
-              </p>
-            </div>
+            {assessments.length ? (
+              <div className="flex flex-col gap-unit-2">
+                {assessments.map((assessment) => (
+                  <Link
+                    key={assessment.id}
+                    href={`/learner/quiz/${assessment.id}`}
+                    className="flex items-center gap-unit-3 rounded-lg bg-surface-container-lowest p-unit-3 shadow-card hover:shadow-card-float transition-shadow"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-primary-fixed/60 flex items-center justify-center text-on-primary-fixed-variant shrink-0">
+                      <Icon name="play_arrow" size={20} filled />
+                    </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-label-md text-on-surface truncate">
+                        {assessment.title}
+                      </span>
+                      <span className="text-label-sm text-secondary">
+                        {assessment.questionCount} questions
+                        {assessment.lastScore !== null && assessment.lastMax !== null
+                          ? ` · last ${assessment.lastScore}/${assessment.lastMax}`
+                          : ""}
+                      </span>
+                    </div>
+                    <Icon name="chevron_right" size={20} className="text-outline shrink-0" />
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-unit-1">
+                <h3 className="font-display text-headline-sm text-on-surface">
+                  Your first quiz is one upload away
+                </h3>
+                <p className="text-body-sm text-on-surface-variant">
+                  A parent reviews every AI-generated quiz before it reaches your
+                  board. Nothing unscreened ever lands here.
+                </p>
+              </div>
+            )}
           </section>
 
           <section className="bg-surface-container-lowest rounded-xl p-unit-6 shadow-card flex flex-col gap-unit-4 text-center items-center">
