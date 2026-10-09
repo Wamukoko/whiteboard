@@ -32,6 +32,9 @@ importers:
       '@whb/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@whb/workers':
+        specifier: workspace:*
+        version: link:../../workers
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3

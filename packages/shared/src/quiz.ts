@@ -115,11 +115,21 @@ export const quizPayloadSchema = z
 export type QuizPayload = z.infer<typeof quizPayloadSchema>;
 
 /**
+ * Minimal shape grading depends on. Kept structural rather than `QuizQuestion`
+ * so an `AssessmentQuestion` row (which carries no type/topic columns) can be
+ * graded without rehydrating the full generation payload.
+ */
+export interface GradableQuestion {
+  id: string;
+  correctAnswer: string;
+}
+
+/**
  * Grade a learner's answers. Scoring is deliberately server-side and pure so it
  * can be unit tested and re-run for review without trusting the client.
  */
 export function gradeQuiz(
-  questions: readonly QuizQuestion[],
+  questions: readonly GradableQuestion[],
   answers: Readonly<Record<string, string>>,
 ): { score: number; maxScore: number; correctCount: number } {
   let correctCount = 0;

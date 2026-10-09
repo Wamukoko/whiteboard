@@ -1,9 +1,15 @@
 import { prisma } from "@whb/db";
-import { estimateTokens } from "@whb/shared";
+import {
+  estimateTokens,
+  GENERATE_QUIZ_JOB,
+  type GenerateQuizJobData,
+} from "@whb/shared";
 import { createQuizGenerator, generateQuizFromDocument } from "../ai";
 import { AnthropicTranscriber, type DocumentTranscriber } from "../ai/transcriber";
 import { assertExtractable, extractText, ExtractionError } from "../extraction";
 import { getObject } from "../storage";
+
+export { GENERATE_QUIZ_JOB, type GenerateQuizJobData } from "@whb/shared";
 
 /**
  * `ai-generation` job handler (Phase 2).
@@ -16,18 +22,6 @@ import { getObject } from "../storage";
  * surfaces that reason. A generation that consumed tokens is still counted
  * against the family's monthly cap, because the cost was actually incurred.
  */
-
-export const GENERATE_QUIZ_JOB = "generate-quiz";
-
-export interface GenerateQuizJobData {
-  materialId: string;
-  learnerId: string;
-  questionCount: number;
-  difficulty: "EASY" | "MEDIUM" | "HARD";
-  model: string;
-  /** Content row created at enqueue time; updated as the job progresses. */
-  contentId: string;
-}
 
 export interface JobDependencies {
   transcriber: DocumentTranscriber;

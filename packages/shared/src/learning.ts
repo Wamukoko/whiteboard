@@ -82,3 +82,22 @@ export const submitAttemptSchema = z.object({
 });
 
 export type SubmitAttemptInput = z.infer<typeof submitAttemptSchema>;
+
+/**
+ * Queue contract between the web producer and the worker consumer.
+ *
+ * It lives in `shared` rather than next to the worker handler on purpose: the
+ * web route only needs the queue name and payload shape, and importing the
+ * handler module would drag the Anthropic SDK into the Next.js bundle.
+ */
+export const GENERATE_QUIZ_JOB = "generate-quiz";
+
+export interface GenerateQuizJobData {
+  materialId: string;
+  learnerId: string;
+  questionCount: number;
+  difficulty: "EASY" | "MEDIUM" | "HARD";
+  model: string;
+  /** Content row created at enqueue time; updated as the job progresses. */
+  contentId: string;
+}

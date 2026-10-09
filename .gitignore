@@ -38,6 +38,10 @@ pnpm-debug.log*
 infra/.pgdata/
 infra/.redisdata/
 
+# local upload storage (Phase 2 STORAGE_ROOT default)
+.whiteboard-storage/
+**/.whiteboard-storage/
+
 # editor
 .idea/
 .vscode/*

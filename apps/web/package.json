@@ -15,6 +15,7 @@
     "@whb/db": "workspace:*",
     "@whb/shared": "workspace:*",
     "@whb/ui": "workspace:*",
+    "@whb/workers": "workspace:*",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "next": "^15.1.4",
