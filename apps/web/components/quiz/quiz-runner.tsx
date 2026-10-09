@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Button, Icon, ProgressBar } from "@whb/ui";
+import { AI_GENERATED_MARKER } from "@whb/shared";
+import { Badge, Button, Icon, ProgressBar } from "@whb/ui";
 
 interface QuizQuestion {
   id: string;
@@ -95,7 +96,10 @@ export function QuizRunner({
     <div className="flex flex-col gap-unit-5">
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
-          <h1 className="font-display text-headline-sm text-primary">{title}</h1>
+          <div className="flex items-center gap-unit-2">
+            <h1 className="font-display text-headline-sm text-primary">{title}</h1>
+            <Badge tone="primary">{AI_GENERATED_MARKER}</Badge>
+          </div>
           <p className="text-label-sm text-secondary">
             {answered} of {questions.length} answered
           </p>

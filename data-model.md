@@ -47,3 +47,4 @@ Core entities for the WhiteBoard modular monolith. Full definitions live in the 
 - Every migration ships with a rollback plan.
 - Destructive migrations (drops, renames, type changes) require a reviewed human step before applying to staging/production.
 - Prisma generates migrations from `packages/db`; seeds populate the CBC pilot structure from official curriculum documents only — never invented structure.
+- **Migration files must be UTF-8.** Prisma reads them as bytes, so a migration saved as UTF-16 (e.g. a Windows `Out-File`/`>` redirect) commits a NUL-laden file that Git reports as `Bin` and Postgres rejects with `string contains embedded null`. If `pnpm db:migrate`/`deploy` fails this way, check the file encoding first: on Windows write with `Set-Content -Encoding utf8` / `Out-File -Encoding utf8`, never a bare `>` redirect.

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AI_GENERATED_MARKER } from "@whb/shared";
 import { Badge, Button, Icon } from "@whb/ui";
 import type { LibraryContent } from "@/lib/library-data";
 
@@ -45,6 +46,7 @@ export function ContentReview({ content }: { content: LibraryContent }) {
           <span className="text-label-md text-on-surface">
             {content.title ?? "Untitled quiz"}
           </span>
+          <Badge tone="primary">{AI_GENERATED_MARKER}</Badge>
           <Badge tone="secondary">{content.questionCount} questions</Badge>
         </div>
         <span className="text-label-sm text-secondary">For {content.learnerName}</span>

@@ -13,6 +13,7 @@
     "db:validate": "pnpm --filter @whb/db validate",
     "db:migrate": "pnpm --filter @whb/db migrate",
     "db:seed": "pnpm --filter @whb/db seed",
+    "qa:journey": "pnpm --filter @whb/db exec tsx scripts/phase2-journey.ts",
     "verify": "pnpm db:validate && pnpm lint && pnpm typecheck && pnpm build && pnpm test"
   },
   "engines": {

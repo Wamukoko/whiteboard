@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  AI_GENERATED_MARKER,
   gradeQuiz,
   quizPayloadSchema,
   quizQuestionSchema,
@@ -185,6 +186,13 @@ describe("gradeQuiz", () => {
   it("ignores answers for unknown question ids", () => {
     const result = gradeQuiz([multipleChoice], { q1: "4", q99: "anything" });
     expect(result).toEqual({ score: 1, maxScore: 1, correctCount: 1 });
+  });
+});
+
+describe("AI-generated labelling", () => {
+  it("exposes a non-empty, user-facing marker for generated content", () => {
+    expect(AI_GENERATED_MARKER.trim().length).toBeGreaterThan(0);
+    expect(AI_GENERATED_MARKER).toBe("AI-generated");
   });
 });
 

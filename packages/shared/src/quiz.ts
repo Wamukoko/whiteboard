@@ -115,6 +115,13 @@ export const quizPayloadSchema = z
 export type QuizPayload = z.infer<typeof quizPayloadSchema>;
 
 /**
+ * Human-readable marker every AI-generated artifact must carry (testing-strategy
+ * privacy rule: "generated content always carries the AI-generated marker").
+ * Centralised so the API and both UIs cannot drift on the wording.
+ */
+export const AI_GENERATED_MARKER = "AI-generated";
+
+/**
  * Minimal shape grading depends on. Kept structural rather than `QuizQuestion`
  * so an `AssessmentQuestion` row (which carries no type/topic columns) can be
  * graded without rehydrating the full generation payload.

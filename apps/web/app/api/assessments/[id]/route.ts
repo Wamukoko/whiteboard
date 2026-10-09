@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@whb/db";
+import { AI_GENERATED_MARKER } from "@whb/shared";
 import { isAuthFailure, resolveParentContext } from "@/lib/learning";
 
 export const runtime = "nodejs";
@@ -50,6 +51,8 @@ export async function GET(
         id: assessment.id,
         title: assessment.title,
         learnerId: assessment.sourceContent?.learnerId ?? null,
+        aiGenerated: true,
+        label: AI_GENERATED_MARKER,
         questions: assessment.questions,
       },
     },

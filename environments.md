@@ -29,3 +29,7 @@ Three environments are required: local, staging, production. Secrets are strictl
 - Google Calendar OAuth redirect URIs differ per environment — register each.
 - Jitsi: self-hosted instance needs a stable URL per env; external Jitsi can be used for staging while prod decides on self-host later (see ADR-005-related decisions).
 - AI usage caps: staging uses dev keys with low budgets; production caps enforced server-side per tier and monitored for cost anomaly.
+- **Local DB credentials.** The web app reads `apps/web/.env.local`; `packages/db/.env` can drift (it once held stale creds). Prisma auto-loads whichever `.env` sits in its cwd, so `pnpm qa:journey` deliberately treats `apps/web/.env.local` as authoritative.
+- **`STORAGE_ROOT` is cwd-relative.** Its default `.whiteboard-storage` resolves under each process's cwd, so the web app (`apps/web`) and the worker (`workers`) write to different folders unless `STORAGE_ROOT` is set to an absolute path.
+- **Redis is required for the real generation path.** Without it, `POST /api/generation` still creates the row but marks it `FAILED` with a parent-safe reason; the worker path needs Redis + `ANTHROPIC_API_KEY`.
+- **Phase 2 journey check.** With the dev server running, `pnpm qa:journey` provisions and tears down throwaway families and asserts upload → review gate → answer-key isolation → server-side grading → cross-family isolation → server-side monthly cap.

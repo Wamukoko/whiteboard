@@ -60,6 +60,7 @@
 - **Exit criteria:** Full journey passes E2E on 3G; generated quizzes always parse to valid schema; parent gate blocks unreviewed AI content; caps enforced server-side; no cross-family data exposure in tests.
 - **Decisions needed:** LLM provider + pricing model (Anthropic Claude assumed per spec); OCR approach (cloud vs tesseract.js) based on cost.
 - **Risks:** AI cost overruns → token logging + hard monthly caps from day one; poor OCR on handwritten notes → default to cloud OCR path, keep tesseract fallback.
+- **Status:** Implemented and verified. Committed in slices `c36aac3` (shared contracts + chunking), `5613cc0` (worker AI pipeline), `89d8b85` (Phase 2 schema/migration), `3b1287e` (storage + extraction + worker boot), `6651699` (learning API routes), `87a861f` (parent review + learner quiz UI); a pre-existing Phase 1 migration-encoding bug was found and fixed in `9e5736c` (the init migration was UTF-16/NUL-laden, so the DB had never been initializable — see data-model.md "Migration discipline"). `pnpm verify` is green (87 tests: 55 shared + 32 workers). The journey exit criteria are asserted by `pnpm qa:journey` against a live server (upload → review gate → answer-key isolation → server-side grading → cross-family isolation → server-side monthly cap). Still requires a live environment to close: running the BullMQ worker against Redis with a real `ANTHROPIC_API_KEY` (exercises the genuine AI-generation path rather than the queue-down `FAILED` path) and a 3G/throttled E2E pass.
 
 ---
 
@@ -126,4 +127,4 @@
 
 ## Step 4a — GitHub sync status
 
-Per README Step 4a: repository created at `https://github.com/Wamukoko/whiteboard` (git + `gh` confirmed available and authenticated). Phase 0 (bootstrap) and Phase 1 (foundation) are committed on `main` (`78043dd` bootstrap, `f526bc0` Phase 1). Going forward, every completed phase is committed and pushed, and ad-hoc changes receive their own descriptive commits.
+Per README Step 4a: repository created at `https://github.com/Wamukoko/whiteboard` (git + `gh` confirmed available and authenticated). Phase 0 (bootstrap), Phase 1 (foundation), and Phase 2 (learning & AI quizzes) are committed on `main` (`78043dd` bootstrap, `f526bc0` Phase 1, Phase 2 slices `c36aac3`/`5613cc0`/`89d8b85`/`3b1287e`/`6651699`/`87a861f` plus migration-encoding fix `9e5736c`). Going forward, every completed phase is committed and pushed, and ad-hoc changes receive their own descriptive commits.
