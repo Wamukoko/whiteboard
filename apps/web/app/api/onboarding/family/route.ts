@@ -6,6 +6,42 @@ import { getPrimaryFamilyMembership } from "@/lib/scope";
 import { rateLimit } from "@/lib/rate-limit";
 
 /**
+ * GET /api/onboarding/family
+ * Returns the caller's primary family (if any) plus a learner count, so the
+ * onboarding wizard can tell a first-run from "add another child" and skip the
+ * naming step that would otherwise loop a parent back to the start.
+ */
+export async function GET() {
+  const user = await apiRequireUser();
+  if (!user) {
+    return NextResponse.json(
+      { error: { code: "UNAUTHENTICATED", message: "Please sign in." } },
+      { status: 401 },
+    );
+  }
+
+  const membership = await getPrimaryFamilyMembership(user.id);
+  if (!membership) {
+    return NextResponse.json({ ok: true, data: { family: null } });
+  }
+
+  const learnersCount = await prisma.learnerProfile.count({
+    where: { familyId: membership.familyId },
+  });
+
+  return NextResponse.json({
+    ok: true,
+    data: {
+      family: {
+        id: membership.familyId,
+        displayName: membership.family.displayName,
+        learnersCount,
+      },
+    },
+  });
+}
+
+/**
  * POST /api/onboarding/family
  * Creates the user's primary family with the given name (or renames an
  * existing one, e.g., after the parent edits it during onboarding).

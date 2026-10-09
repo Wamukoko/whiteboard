@@ -47,6 +47,21 @@ export function OnboardingWizard() {
       .catch(() => setCurricula([]));
   }, []);
 
+  useEffect(() => {
+    fetch("/api/onboarding/family")
+      .then((r) => r.json())
+      .then((payload) => {
+        const family = payload?.data?.family;
+        if (!family) return;
+        if (family.displayName) setFamilyName(family.displayName);
+        // A family that already has children means this run is "add another
+        // child": skip the naming step so the parent is not asked to re-create
+        // a family that exists (which is what made this feel like a loop).
+        if ((family.learnersCount ?? 0) > 0) setStep(2);
+      })
+      .catch(() => {});
+  }, []);
+
   async function post(path: string, body: unknown): Promise<{ ok: boolean; data?: any; error?: any }> {
     setBusy(true);
     setServerError(null);
@@ -163,7 +178,12 @@ export function OnboardingWizard() {
             />
             {errors.familyName ? <span className="text-label-sm text-error">{errors.familyName[0]}</span> : null}
           </label>
-          <Button size="lg" fullWidth onClick={saveFamily} disabled={busy}>
+          <Button
+            size="lg"
+            fullWidth
+            onClick={() => void saveFamily().then((ok) => ok && setStep(2))}
+            disabled={busy}
+          >
             Continue · Add a child
           </Button>
         </div>

@@ -13,6 +13,27 @@ const PATH_ROLE_REQUIREMENTS: Array<{
   { prefix: "/onboarding", roles: ["PARENT_GUARDIAN"] },
 ];
 
+/**
+ * Landing page for a signed-in user, chosen from their roles.
+ *
+ * Every fallback must be a path the same user is allowed to open: redirecting
+ * a role to a page it cannot access makes the middleware bounce the request
+ * back to itself (an infinite redirect loop).
+ */
+function homeRouteFor(roles: Role[]): string {
+  if (
+    roles.includes("PARENT_GUARDIAN") ||
+    roles.includes("SUPER_ADMIN") ||
+    roles.includes("PLATFORM_ADMIN")
+  ) {
+    return "/parent";
+  }
+  if (roles.includes("LEARNER") || roles.includes("EDUCATOR")) {
+    return "/learner";
+  }
+  return "/";
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -40,7 +61,12 @@ export async function middleware(request: NextRequest) {
 
   for (const rule of PATH_ROLE_REQUIREMENTS) {
     if (pathname.startsWith(rule.prefix) && !roles.some((r) => rule.roles.includes(r))) {
-      const fallback = roles.includes("PARENT_GUARDIAN") ? "/parent" : "/onboarding";
+      const fallback = homeRouteFor(roles);
+      // Guard against a self-redirect: if the user's home is the page they
+      // were just denied, send them somewhere public instead of looping.
+      if (fallback === pathname) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
       return NextResponse.redirect(new URL(fallback, request.url));
     }
   }
