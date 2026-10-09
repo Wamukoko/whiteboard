@@ -1,4 +1,5 @@
 import { Queue, type ConnectionOptions } from "bullmq";
+import { AI_GENERATION_QUEUE } from "@whb/shared";
 
 /**
  * Single shared Redis connection for the worker process (ADR-005).
@@ -11,7 +12,7 @@ export const connection = {
 
 /** Producer handle the web app enqueues through (import in apps/web Phase 2). */
 export function aiGenerationQueue() {
-  return new Queue("ai-generation", {
+  return new Queue(AI_GENERATION_QUEUE, {
     connection: {
       host: connection.host,
       port: connection.port,

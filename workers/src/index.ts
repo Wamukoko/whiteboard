@@ -1,4 +1,6 @@
+import { pathToFileURL } from "node:url";
 import { Worker } from "bullmq";
+import { AI_GENERATION_QUEUE } from "@whb/shared";
 import { connection } from "./queue";
 import {
   GENERATE_QUIZ_JOB,
@@ -21,7 +23,7 @@ export async function startWorker() {
   const deps = createJobDependencies();
 
   const worker = new Worker(
-    GENERATE_QUIZ_JOB,
+    AI_GENERATION_QUEUE,
     async (job) => handleGenerateQuiz(job.data as GenerateQuizJobData, deps),
     {
       connection,
@@ -44,7 +46,11 @@ export async function startWorker() {
   return worker;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isEntryPoint =
+  typeof process.argv[1] === "string" &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isEntryPoint) {
   startWorker().catch((err) => {
     console.error("[worker] failed to start:", err);
     process.exit(1);

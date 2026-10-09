@@ -92,6 +92,9 @@ export type SubmitAttemptInput = z.infer<typeof submitAttemptSchema>;
  */
 export const GENERATE_QUIZ_JOB = "generate-quiz";
 
+/** BullMQ queue name shared by the web producer and the worker consumer. */
+export const AI_GENERATION_QUEUE = "ai-generation";
+
 export interface GenerateQuizJobData {
   materialId: string;
   learnerId: string;
